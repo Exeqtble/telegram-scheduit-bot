@@ -6,17 +6,32 @@ import pytz
 from datetime import datetime
 from telebot import TeleBot, types
 from schedules import schedules
+from config import BOT_TOKEN
 
 user_data = {}
-BOT_TOKEN = 'Bot_token'
 bot = telebot.TeleBot(BOT_TOKEN)
 user_schedules = {}
+
+def get_group_by_chat_id(message):
+    chat_id = message.chat.id
+    with open("user_data.txt", "r", encoding="utf-8") as f:
+        for line in f:
+            parts = line.strip().split(maxsplit=1)
+            if len(parts) == 2:
+                saved_id, group = parts
+                if saved_id.strip() == str(chat_id).strip():
+                    return group.strip()
+
+    return None
+
+
 
 @bot.message_handler(commands=['start'])
 def start(message):
     chat_id = message.chat.id
     bot.send_message(chat_id, "Введите сначала группу.", )
     buttons(message)
+
 
 def buttons(message):
     chat_id = message.chat.id
@@ -28,9 +43,7 @@ def buttons(message):
         'Включить уведомления',
         'Выключить уведомления'
     )
-   
     bot.send_message(chat_id, "Выбери действие:", reply_markup=keyboard)
-
     bot.register_next_step_handler(message, process_buttons_commands)
 
 
@@ -59,38 +72,26 @@ def process_buttons_commands(message):
 def chose_group_command(message):
     chat_id = message.chat.id
     keyboard = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    keyboard.add('1', '2')
+    keyboard.add('72', '74')
     bot.send_message(chat_id, "Какая группа?", reply_markup=keyboard)
     bot.register_next_step_handler(message, process_group_choice)
 
 def process_group_choice(message):
     chat_id = message.chat.id
     group = message.text.strip()
-    if group in ['1']:
-        bot.send_message(chat_id, "Выбрана 1 группа.")
-    elif group in['2']:
-        bot.send_message(chat_id, "Выбрана 2 группа.")
+    if group in ['72']:
+        bot.send_message(chat_id, "Выбрана 72 группа.")
+    elif group in['74']:
+        bot.send_message(chat_id, "Выбрана 74 группа.")
     else:
         bot.send_message(chat_id, "Неверный выбор. Попробуй снова.")
         return
     user_data[chat_id] = group
     print(f"Сюдаа {chat_id}: {group}")
-    with open("user_data.txt", "w", encoding="utf-8") as f:
+    with open("user_data.txt", "w+", encoding="utf-8") as f:
      for cid, grp in user_data.items():
         print(cid, grp, file=f)
      buttons(message)
-
-
-def get_group_by_chat_id(chat_id):
-    with open("user_data.txt", "r", encoding="utf-8") as f:
-        for line in f:
-            parts = line.strip().split(maxsplit=1)
-            if len(parts) == 2:
-                saved_id, group = parts
-                if saved_id.strip() == str(chat_id).strip():
-                    return group.strip()
-
-    return None
 
 
 
@@ -110,9 +111,10 @@ def get_schedule(group: int, week: int, day: str) -> str:
 def ask_day(message):
     chat_id = message.chat.id
     keyboard = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    keyboard.add('Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота💀')
+    keyboard.add('Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота')
     bot.send_message(chat_id, "Выбери день", reply_markup=keyboard)
     bot.register_next_step_handler(message, process_day_choice)
+
 
 def process_day_choice(message):
     tz = pytz.timezone("Europe/Minsk")
@@ -202,7 +204,7 @@ def remove_reminder_command(message):
         bot.send_message(chat_id, "Уведомления небыли включены.")
 
 def bot_polling():
-    bot.polling(none_stop=True)
+    bot.polling(none_stop=True, interval=0, timeout=60, long_polling_timeout=60)
 
 threading.Thread(target=bot_polling).start()
 
