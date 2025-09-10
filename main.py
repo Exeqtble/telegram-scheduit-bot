@@ -6,15 +6,15 @@ import pytz
 from datetime import datetime
 from telebot import TeleBot, types
 from schedules import schedules
-from config import BOT_TOKEN
+from config import bot_token
 
 user_data = {}
-bot = telebot.TeleBot(BOT_TOKEN)
+bot = telebot.TeleBot(bot_token)
 user_schedules = {}
 
 def get_group_by_chat_id(message):
     chat_id = message.chat.id
-    with open("user_data.txt", "r", encoding="utf-8") as f:
+    with open("user_data.py", "r", encoding="utf-8") as f:
         for line in f:
             parts = line.strip().split(maxsplit=1)
             if len(parts) == 2:
@@ -88,7 +88,7 @@ def process_group_choice(message):
         return
     user_data[chat_id] = group
     print(f"Сюдаа {chat_id}: {group}")
-    with open("user_data.txt", "w+", encoding="utf-8") as f:
+    with open("user_data.py", "w+", encoding="utf-8") as f:
      for cid, grp in user_data.items():
         print(cid, grp, file=f)
      buttons(message)
@@ -121,7 +121,7 @@ def process_day_choice(message):
     now = datetime.now(tz)
     chat_id = message.chat.id
     day = message.text.strip()
-    group = get_group_by_chat_id(chat_id)
+    group = get_group_by_chat_id(message)
     ru_to_en = {
         "понедельник": "Monday",
         "вторник": "Tuesday",
@@ -143,11 +143,12 @@ def process_day_choice(message):
     buttons(message)
 
 def send_daily_schedule(message):
-    tz = pytz.timezone("Europe/Moscow")
+    chat_id = message.chat.id
+    tz = pytz.timezone("Europe/Minsk")
     now = datetime.now(tz)
     day_name = now.strftime("%A")
     chat_id = message.chat.id
-    group = get_group_by_chat_id(chat_id)
+    group = get_group_by_chat_id(message)
     if not group:
         bot.send_message(chat_id, "Группа не установлена /group")
         return
@@ -210,4 +211,4 @@ threading.Thread(target=bot_polling).start()
 
 while True:
     schedule.run_pending()
-    time.sleep(1)
+    time.sleep(schedule.idle_seconds() or 1)
