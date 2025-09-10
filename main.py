@@ -207,8 +207,20 @@ def remove_reminder_command(message):
 def bot_polling():
     bot.polling(none_stop=True, interval=0, timeout=60, long_polling_timeout=60)
 
-threading.Thread(target=bot_polling).start()
+threading.Thread(target=bot_polling, daemon=False).start()
 
-while True:
-    schedule.run_pending()
-    time.sleep(schedule.idle_seconds() or 1)
+def job():
+    print("Запланированная задача выполнена")
+
+schedule.every(10).seconds.do(job)
+
+try:
+    while True:
+        schedule.run_pending()
+        delay = schedule.idle_seconds()
+        if delay is None:
+            time.sleep(1)
+        else:
+            time.sleep(delay)
+except KeyboardInterrupt:
+    print("Выход по Ctrl+C")
