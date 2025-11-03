@@ -2,3 +2,4 @@
 shedultbot for telegramm
 plans:
 -  saving reminder time  
+-  inline func
