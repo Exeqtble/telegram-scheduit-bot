@@ -136,7 +136,6 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ['Включить уведомления', 'Выключить уведомления']
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    await update.message.reply_text("Выбери действие:", reply_markup=reply_markup)
 
 
 async def process_buttons_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
