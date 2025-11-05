@@ -124,18 +124,20 @@ def save_user_data():
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
-    await update.message.reply_text("Введите сначала группу.")
-    await buttons(update, context)
+    # При старте показываем основную клавиатуру без дополнительного сообщения
+    await update.message.reply_text(
+        "\u200b",  # нулевой пробел, чтобы не показывать лишний текст
+        reply_markup=get_main_keyboard()
+    )
 
 
-async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
+def get_main_keyboard():
     keyboard = [
         ['Выбрать группу', 'Расписание на сегодня'],
         ['Расписание на день недели'],
         ['Включить уведомления', 'Выключить уведомления']
     ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
 
 async def process_buttons_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -179,9 +181,12 @@ async def process_group_choice(update: Update, context: ContextTypes.DEFAULT_TYP
             user_data[chat_id] = group_str
             print(f"Добавлена группа {group_str} для chat_id {chat_id}, всего записей: {len(user_data)}")
             save_user_data()
-            await update.message.reply_text(f"Выбрана группа {group_str}.")
+            await update.message.reply_text(
+                f"Выбрана группа {group_str}.",
+                reply_markup=get_main_keyboard()
+            )
             user_states.pop(chat_id, None)
-            await buttons(update, context)
+            
         else:
             await update.message.reply_text("Неверный выбор. Попробуй снова.")
     except ValueError:
@@ -230,9 +235,12 @@ async def process_day_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
     week_number = now.isocalendar()[1]
     week = 1 if week_number % 2 == 0 else 2
     schedule_text = get_schedule(int(group), week, day_out)
-    await update.message.reply_text(f"Расписание за {day} (неделя {week}):\n{schedule_text}")
+    await update.message.reply_text(
+        f"Расписание за {day} (неделя {week}):\n{schedule_text}",
+        reply_markup=get_main_keyboard()
+    )
     user_states.pop(chat_id, None)
-    await buttons(update, context)
+    
 
 
 async def send_daily_schedule(update: Update = None, context: ContextTypes.DEFAULT_TYPE = None, chat_id: int = None):
@@ -268,8 +276,7 @@ async def send_daily_schedule(update: Update = None, context: ContextTypes.DEFAU
     message_text = f"Расписание за {day_out} (неделя {week}):\n{schedule_text}"
     
     if update:
-        await update.message.reply_text(message_text)
-        await buttons(update, context)
+        await update.message.reply_text(message_text, reply_markup=get_main_keyboard())
     else:
         # For scheduled reminders
         if app_instance:
