@@ -247,6 +247,13 @@ async def process_group_choice(update: Update, context: ContextTypes.DEFAULT_TYP
     except ValueError:
         await update.message.reply_text("Неверный выбор. Попробуй снова.")
 
+def _parse_time(time_str):
+    try:
+        start = time_str.split('-')[0].strip()
+        h, m = start.split(':')
+        return int(h) * 60 + int(m)
+    except (ValueError, IndexError):
+        return 0
 
 def get_schedule(group: int, week: int, day: str) -> str:
     day_schedule = schedules.get(group, {}).get(week, {}).get(day)
@@ -257,7 +264,7 @@ def get_schedule(group: int, week: int, day: str) -> str:
     if isinstance(day_schedule, dict): 
         # Пустая строка между парами для лучшей читаемости в Telegram
         return "\n\n".join(
-            f"{time}: {subject}" for time, subject in sorted(day_schedule.items())
+            f"{time}: {subject}" for time, subject in sorted(day_schedule.items(), key=lambda x: _parse_time(x[0]))
         )
     return str(day_schedule)
 
